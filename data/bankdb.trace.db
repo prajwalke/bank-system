@@ -4,3 +4,21 @@ SELECT * FROM USER [42001-232]
 2026-05-21 18:20:43.018776+05:30 jdbc[14]: exception
 org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "SELECT * FROM [*]USER"; expected "identifier"; SQL statement:
 SELECT * FROM USER [42001-232]
+2026-05-22 15:28:05.561074+05:30 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "SELECT *  FROM [*]USER"; expected "identifier"; SQL statement:
+SELECT *  FROM USER [42001-232]
+2026-05-22 15:28:07.800849+05:30 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "SELECT *  FROM [*]USER"; expected "identifier"; SQL statement:
+SELECT *  FROM USER [42001-232]
+2026-05-25 11:43:17.978346+05:30 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "[*]USERS"; expected "UPDATE"; SQL statement:
+USERS [42001-232]
+2026-05-25 15:25:53.379759+05:30 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "[*]USERS"; expected "UPDATE"; SQL statement:
+USERS [42001-232]
+2026-05-25 15:26:28.443148+05:30 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "[*]ACCOUNTS"; expected "ALTER, ANALYZE"; SQL statement:
+ACCOUNTS [42001-232]
+2026-05-25 15:26:49.011461+05:30 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "SELECT * FROM [*]USER"; expected "identifier"; SQL statement:
+SELECT * FROM USER [42001-232]
