@@ -1,41 +1,68 @@
 package com.example.banking_system.config;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
+
+import com.example.banking_system.security.JwtFilter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.*;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.*;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
 
-    @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        @Autowired
+        private JwtFilter jwtFilter;
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        @Bean
+        public BCryptPasswordEncoder passwordEncoder() {
 
-        http
-                .csrf(csrf -> csrf.disable())
+                return new BCryptPasswordEncoder();
+        }
 
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/h2-console/**").permitAll()
-                        .anyRequest().permitAll()
-                )
+        @Bean
+        public AuthenticationManager authenticationManager(
+                        AuthenticationConfiguration config) throws Exception {
 
-                .headers(headers ->
-                        headers.frameOptions(
-                                HeadersConfigurer.FrameOptionsConfig::disable
-                        )
-                )
+                return config.getAuthenticationManager();
+        }
 
-                .formLogin(form -> form.disable())
+        @Bean
+        public SecurityFilterChain filterChain(
+                        HttpSecurity http) throws Exception {
 
-                .httpBasic(Customizer.withDefaults());
+                http
+                                .csrf(csrf -> csrf.disable())
 
-        return http.build();
-    }
+                                .authorizeHttpRequests(auth -> auth
+
+                                                .requestMatchers(
+                                                                "/auth/**",
+                                                                "/h2-console/**")
+                                                .permitAll()
+
+                                                .requestMatchers("/auth/**").permitAll()
+
+                                                .requestMatchers("/admin/**")
+                                                .hasAuthority("ADMIN")
+
+                                                .requestMatchers("/account/**")
+                                                .hasAnyAuthority("CUSTOMER", "ADMIN")
+
+                                                .anyRequest().authenticated())
+
+                                .sessionManagement(session -> session.sessionCreationPolicy(
+                                                SessionCreationPolicy.STATELESS))
+
+                                .headers(headers -> headers.frameOptions(frame -> frame.disable()));
+
+                http.addFilterBefore(
+                                jwtFilter,
+                                UsernamePasswordAuthenticationFilter.class);
+
+                return http.build();
+        }
 }

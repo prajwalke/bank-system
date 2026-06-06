@@ -5,6 +5,7 @@ import com.example.banking_system.dto.RegisterRequest;
 import com.example.banking_system.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import com.example.banking_system.dto.LoginResponse;
 
 @RestController
 @RequestMapping("/auth")
@@ -20,8 +21,16 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public String loginUser(@RequestBody LoginRequest request) {
+    public LoginResponse loginUser(@RequestBody LoginRequest request) {
 
         return userService.loginUser(request);
     }
 }
+
+/*@PostMapping("/login")
+public LoginResponse loginUser(
+        @RequestBody LoginRequest request
+) {
+
+    return userService.loginUser(request);
+} */

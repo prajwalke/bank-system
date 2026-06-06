@@ -1,15 +1,19 @@
 package com.example.banking_system.services;
+
 import com.example.banking_system.dto.AccountRequest;
 import com.example.banking_system.dto.ApiResponse;
 import com.example.banking_system.dto.TransactionRequest;
 import com.example.banking_system.dto.TransferRequest;
 import com.example.banking_system.entity.Account;
 import com.example.banking_system.entity.Transaction;
+import com.example.banking_system.exception.InsufficientBalanceException;
+import com.example.banking_system.exception.ResourceNotFoundException;
 import com.example.banking_system.repository.AccountRepository;
 import com.example.banking_system.repository.TransactionRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.example.banking_system.dto.ApiResponse;
+
 import java.time.LocalDateTime;
 import java.util.Random;
 
@@ -22,9 +26,12 @@ public class AccountService {
     @Autowired
     private TransactionRepository transactionRepository;
 
+    /* -------------------- CREATE ACCOUNT -------------------- */
+
     public String createAccount(AccountRequest request) {
 
-        String accountNumber = "ACC" + new Random().nextInt(999999);
+        String accountNumber =
+                "ACC" + new Random().nextInt(999999);
 
         Account account = Account.builder()
                 .accountNumber(accountNumber)
@@ -35,144 +42,200 @@ public class AccountService {
 
         accountRepository.save(account);
 
-        return "Account Created Successfully : " + accountNumber;
+        return "Account Created Successfully : "
+                + accountNumber;
     }
 
-    /* -------------------------Deposit------------------------- */
-    public ApiResponse deposit(TransactionRequest request) {
+    /* -------------------- DEPOSIT -------------------- */
 
-    Account account = accountRepository.findByAccountNumber(
-            request.getAccountNumber());
+    public ApiResponse deposit(
+            TransactionRequest request
+    ) {
 
-    if (account == null) {
+        Account account =
+                accountRepository.findByAccountNumber(
+                        request.getAccountNumber()
+                );
+
+        if (account == null) {
+
+            throw new ResourceNotFoundException(
+                    "Account Not Found"
+            );
+        }
+
+        account.setBalance(
+                account.getBalance()
+                        + request.getAmount()
+        );
+
+        accountRepository.save(account);
+
+        Transaction transaction =
+                Transaction.builder()
+                        .accountNumber(
+                                account.getAccountNumber()
+                        )
+                        .transactionType("DEPOSIT")
+                        .amount(request.getAmount())
+                        .transactionTime(
+                                LocalDateTime.now()
+                        )
+                        .build();
+
+        transactionRepository.save(transaction);
 
         return ApiResponse.builder()
-                .status("ERROR")
-                .message("Account Not Found")
+                .status("SUCCESS")
+                .message(
+                        "Amount Deposited Successfully"
+                )
                 .timestamp(LocalDateTime.now())
                 .build();
     }
 
-    account.setBalance(
-            account.getBalance() + request.getAmount());
+    /* -------------------- WITHDRAW -------------------- */
 
-    accountRepository.save(account);
+    public ApiResponse withdraw(
+            TransactionRequest request
+    ) {
 
-    Transaction transaction = Transaction.builder()
-            .accountNumber(account.getAccountNumber())
-            .transactionType("DEPOSIT")
-            .amount(request.getAmount())
-            .transactionTime(LocalDateTime.now())
-            .build();
-
-    transactionRepository.save(transaction);
-
-    return ApiResponse.builder()
-            .status("SUCCESS")
-            .message("Amount Deposited Successfully")
-            .timestamp(LocalDateTime.now())
-            .build();
-}
-    /*------------------withdraw----------------------- */
-
-    public ApiResponse withdraw(TransactionRequest request) {
-
-        Account account = accountRepository.findByAccountNumber(
-                request.getAccountNumber());
+        Account account =
+                accountRepository.findByAccountNumber(
+                        request.getAccountNumber()
+                );
 
         if (account == null) {
-            return ApiResponse.builder()
-            .status("Error")
-            .message("Account Not Found")
-            .timestamp(LocalDateTime.now())
-            .build();
+
+            throw new ResourceNotFoundException(
+                    "Account Not Found"
+            );
         }
 
-        if (account.getBalance() < request.getAmount()) {
-             return ApiResponse.builder()
-            .status("Error")
-            .message("Insufficient Balance")
-            .timestamp(LocalDateTime.now())
-            .build();
+        if (account.getBalance()
+                < request.getAmount()) {
+
+            throw new InsufficientBalanceException(
+                    "Insufficient Balance"
+            );
         }
 
         account.setBalance(
-                account.getBalance() - request.getAmount());
+                account.getBalance()
+                        - request.getAmount()
+        );
 
         accountRepository.save(account);
 
-        Transaction transaction = Transaction.builder()
-                .accountNumber(account.getAccountNumber())
-                .transactionType("WITHDRAW")
-                .amount(request.getAmount())
-                .transactionTime(LocalDateTime.now())
-                .build();
+        Transaction transaction =
+                Transaction.builder()
+                        .accountNumber(
+                                account.getAccountNumber()
+                        )
+                        .transactionType("WITHDRAW")
+                        .amount(request.getAmount())
+                        .transactionTime(
+                                LocalDateTime.now()
+                        )
+                        .build();
 
         transactionRepository.save(transaction);
 
-         return ApiResponse.builder()
-            .status("Success")
-            .message("amount Withdrawn Successfully")
-            .timestamp(LocalDateTime.now())
-            .build();
+        return ApiResponse.builder()
+                .status("SUCCESS")
+                .message(
+                        "Amount Withdrawn Successfully"
+                )
+                .timestamp(LocalDateTime.now())
+                .build();
     }
 
-    /*---------------------fund Transfer------------------------------- */
+    /* -------------------- TRANSFER -------------------- */
 
-    public ApiResponse transfer(TransferRequest request) {
+    public ApiResponse transfer(
+            TransferRequest request
+    ) {
 
-        Account sender = accountRepository.findByAccountNumber(
-                request.getFromAccount());
+        Account sender =
+                accountRepository.findByAccountNumber(
+                        request.getFromAccount()
+                );
 
-        Account receiver = accountRepository.findByAccountNumber(
-                request.getToAccount());
+        Account receiver =
+                accountRepository.findByAccountNumber(
+                        request.getToAccount()
+                );
 
         if (sender == null || receiver == null) {
-            return ApiResponse.builder()
-        .status("SUCCESS")
-        .message("Fund Transfer Successful")
-        .timestamp(LocalDateTime.now())
-        .build();
+
+            throw new ResourceNotFoundException(
+                    "Invalid Account Details"
+            );
         }
 
-        if (sender.getBalance() < request.getAmount()) {
-           return ApiResponse.builder()
-            .status("Error")
-            .message("Account Not Found")
-            .timestamp(LocalDateTime.now())
-            .build();
+        if (sender.getBalance()
+                < request.getAmount()) {
+
+            throw new InsufficientBalanceException(
+                    "Insufficient Balance"
+            );
         }
 
         sender.setBalance(
-                sender.getBalance() - request.getAmount());
+                sender.getBalance()
+                        - request.getAmount()
+        );
 
         receiver.setBalance(
-                receiver.getBalance() + request.getAmount());
+                receiver.getBalance()
+                        + request.getAmount()
+        );
 
         accountRepository.save(sender);
         accountRepository.save(receiver);
 
-        Transaction senderTransaction = Transaction.builder()
-                .accountNumber(sender.getAccountNumber())
-                .transactionType("TRANSFER_DEBIT")
-                .amount(request.getAmount())
-                .transactionTime(LocalDateTime.now())
+        Transaction senderTransaction =
+                Transaction.builder()
+                        .accountNumber(
+                                sender.getAccountNumber()
+                        )
+                        .transactionType(
+                                "TRANSFER_DEBIT"
+                        )
+                        .amount(request.getAmount())
+                        .transactionTime(
+                                LocalDateTime.now()
+                        )
+                        .build();
+
+        Transaction receiverTransaction =
+                Transaction.builder()
+                        .accountNumber(
+                                receiver.getAccountNumber()
+                        )
+                        .transactionType(
+                                "TRANSFER_CREDIT"
+                        )
+                        .amount(request.getAmount())
+                        .transactionTime(
+                                LocalDateTime.now()
+                        )
+                        .build();
+
+        transactionRepository.save(
+                senderTransaction
+        );
+
+        transactionRepository.save(
+                receiverTransaction
+        );
+
+        return ApiResponse.builder()
+                .status("SUCCESS")
+                .message(
+                        "Fund Transfer Successful"
+                )
+                .timestamp(LocalDateTime.now())
                 .build();
-
-        Transaction receiverTransaction = Transaction.builder()
-                .accountNumber(receiver.getAccountNumber())
-                .transactionType("TRANSFER_CREDIT")
-                .amount(request.getAmount())
-                .transactionTime(LocalDateTime.now())
-                .build();
-
-        transactionRepository.save(senderTransaction);
-        transactionRepository.save(receiverTransaction);
-
-         return ApiResponse.builder()
-            .status("Error")
-           .message("Insufficient Balance")
-            .timestamp(LocalDateTime.now())
-            .build();
     }
 }
