@@ -6,6 +6,8 @@ import com.example.banking_system.dto.TransactionRequest;
 import com.example.banking_system.dto.TransferRequest;
 import com.example.banking_system.services.AccountService;
 
+import jakarta.validation.constraints.AssertFalse.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,4 +45,25 @@ public class AccountController {
 
         return accountService.transfer(request);
     }
+
+    @GetMapping("/statement/{accountNumber}")
+    public List getstatement(
+            @PathVariable String accountNumber
+
+    ) {
+        return (List) accountService .getStatement(accountNumber);
+    }
+
 }
+
+/*
+ * @GetMapping("/statement/{accountNumber}")
+ * public List<Transaction> getStatement(
+ * 
+ * @PathVariable String accountNumber
+ * ) {
+ * 
+ * return accountService
+ * .getStatement(accountNumber);
+ * }
+ */
