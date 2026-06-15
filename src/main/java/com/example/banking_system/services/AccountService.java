@@ -3,12 +3,14 @@ package com.example.banking_system.services;
 import com.example.banking_system.audit.AuditLogService;
 import com.example.banking_system.dto.AccountRequest;
 import com.example.banking_system.dto.ApiResponse;
+import com.example.banking_system.dto.TransactionEvent;
 import com.example.banking_system.dto.TransactionRequest;
 import com.example.banking_system.dto.TransferRequest;
 import com.example.banking_system.entity.Account;
 import com.example.banking_system.entity.Transaction;
 import com.example.banking_system.exception.InsufficientBalanceException;
 import com.example.banking_system.exception.ResourceNotFoundException;
+import com.example.banking_system.kafka.producer.KafkaProducerService;
 import com.example.banking_system.repository.AccountRepository;
 import com.example.banking_system.repository.TransactionRepository;
 
@@ -21,6 +23,8 @@ import java.util.Random;
 
 @Service
 public class AccountService {
+        @Autowired
+private KafkaProducerService producer;
 
         @Autowired
         private AccountRepository accountRepository;
@@ -80,6 +84,14 @@ public class AccountService {
                                 .build();
 
                 transactionRepository.save(transaction);
+                TransactionEvent event = new TransactionEvent(
+        account.getAccountNumber(),
+        "DEPOSIT",
+        request.getAmount(),
+        "Deposit successful"
+);
+
+producer.send(event);
 
                 auditLogService.log(
                                 account.getAccountNumber(),
@@ -124,6 +136,14 @@ public class AccountService {
                                 .build();
 
                 transactionRepository.save(transaction);
+                TransactionEvent event = new TransactionEvent(
+        account.getAccountNumber(),
+        "WITHDRAW",
+        request.getAmount(),
+        "Withdraw successful"
+);
+
+producer.send(event);
 
                 auditLogService.log(
                                 account.getAccountNumber(),
@@ -183,6 +203,14 @@ public class AccountService {
 
                 transactionRepository.save(senderTransaction);
                 transactionRepository.save(receiverTransaction);
+                TransactionEvent event = new TransactionEvent(
+        sender.getAccountNumber(),
+        "TRANSFER",
+        request.getAmount(),
+        "Transfer successful"
+);
+
+producer.send(event);
 
                 auditLogService.log(
                                 sender.getAccountNumber(),
