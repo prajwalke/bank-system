@@ -38,3 +38,10 @@ target/
 *.log
 .env
 data/
+*.mv.db
+*.trace.db
+.idea/
+
+.bloop/
+
+.metals/
